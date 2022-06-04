@@ -14,20 +14,22 @@ import java.util.*;
 public class UserController {
 
     private final Map<Integer, User> users = new HashMap<>();
-    int nextId;
+    private int lastUsedId;
+
+    private int getNextId() {
+        return ++lastUsedId;
+    }
 
     @GetMapping
     public Set<User> findAll() {
-
         return new HashSet<User>(users.values());
     }
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        nextId = user.getId()+1;
         if (user.getName().isBlank() || user.getName().isEmpty())
             user.setName(user.getLogin());
-        user.setId(nextId);
+        user.setId(getNextId());
         users.put(user.getId(), user);
         log.info("Новый пользователь успешно добавлен с ID: '{}'",
                 user.getId());
@@ -40,8 +42,7 @@ public class UserController {
             throw new FilmorateValidationException("неверный ID пользователя для обновления "+user.getId());
         }
         users.put(user.getId(),user);
-        log.info("Пользователь с ID '{}' успешно изменен",
-                user.getId());
+        log.info("Пользователь с ID '{}' успешно изменен", user.getId());
         return user;
     }
 }

@@ -15,11 +15,14 @@ import java.util.*;
 public class FilmController {
 
     private final Map<Integer, Film> films = new HashMap<>();
-    int nextId;
+    private int lastUsedId;
+
+    private int getNextId() {
+        return ++lastUsedId;
+    }
 
     @GetMapping
     public Set<Film> findAll() {
-
         return new HashSet<Film>(films.values());
     }
 
@@ -28,8 +31,7 @@ public class FilmController {
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             throw new FilmorateValidationException("Дата фильма не может быть раньше 28.12.1895");
         }
-        nextId = film.getId()+1;
-        film.setId(nextId);
+        film.setId(getNextId());
         films.put(film.getId(),film);
         log.info("Новый фильм успешно добавлен с ID: '{}'",
                 film.getId());

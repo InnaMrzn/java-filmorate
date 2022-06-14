@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.controller.FilmController;
@@ -9,6 +10,12 @@ import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.FilmorateValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import javax.validation.*;
 
@@ -23,6 +30,8 @@ class FilmorateApplicationTests {
 
 	private static ValidatorFactory validatorFactory;
 	private static Validator validator;
+	FilmService filmService;
+	UserService userService;
 
 	@BeforeAll
 	public static void createValidator() {
@@ -35,6 +44,12 @@ class FilmorateApplicationTests {
 		validatorFactory.close();
 	}
 
+	@BeforeEach
+	public void createServiceObjects (){
+		filmService = new FilmService(new InMemoryFilmStorage(), new InMemoryUserStorage());
+		userService = new UserService(new InMemoryUserStorage());
+	}
+
 	@Test
 	void contextLoads() {
 	}
@@ -42,7 +57,7 @@ class FilmorateApplicationTests {
 	@Test
 	void createUser(){
 		User user = new User("innam@test.ru", "innam", "Inna Murzina", LocalDate.of(1975, 12, 25));
-		UserController controller = new UserController();
+		UserController controller = new UserController(userService);
 		controller.create(user);
 		assertEquals(1,controller.findAll().size() );
 		User result = controller.findAll().iterator().next();
@@ -57,7 +72,7 @@ class FilmorateApplicationTests {
 	@Test
 	void updateUserWithValidId(){
 		User user = new User("innam@test.ru", "innam", "Inna Murzina", LocalDate.of(1975, 12, 25));
-		UserController controller = new UserController();
+		UserController controller = new UserController(userService);
 		controller.create(user);
 		User updateUser = new User("updated@test.ru", "updatedlogin", "Updated Name", LocalDate.of(1985, 1, 20));
 		updateUser.setId(1);
@@ -75,7 +90,7 @@ class FilmorateApplicationTests {
 	@Test
 	void createFilm(){
 		Film film = new Film ("Man in Black", "Best movie ever", LocalDate.of(1997, 1,1),90);
-		FilmController controller = new FilmController();
+		FilmController controller = new FilmController(filmService);
 		controller.create(film);
 		assertEquals(1,controller.findAll().size() );
 		Film result = controller.findAll().iterator().next();
@@ -90,7 +105,7 @@ class FilmorateApplicationTests {
 	@Test
 	void updateFilmWithValidId(){
 		Film film = new Film ("Man in Black", "Best movie ever", LocalDate.of(1997, 1,1),90);
-		FilmController controller = new FilmController();
+		FilmController controller = new FilmController(filmService);
 		controller.create(film);
 		Film updateFilm = new Film ("Updated film name", "Updated film description", LocalDate.of(2000, 2,2),100);
 		updateFilm.setId(1);
@@ -108,7 +123,7 @@ class FilmorateApplicationTests {
 	@Test
 	void updateFilmWithNegativeIdShouldThrowException(){
 		Film film = new Film ("Man in Black", "Best movie ever", LocalDate.of(1997, 1,1),90);
-		FilmController controller = new FilmController();
+		FilmController controller = new FilmController(filmService);
 		controller.create(film);
 		Film updateFilm = new Film ("Updated film name", "Updated film description", LocalDate.of(2000, 2,2),100);
 		updateFilm.setId(-1);
@@ -124,7 +139,7 @@ class FilmorateApplicationTests {
 	@Test
 	void updateUserWithNegativeIdShouldThrowException(){
 		User user = new User("innam@test.ru", "innam", "Inna Murzina", LocalDate.of(1975, 12, 25));
-		UserController controller = new UserController();
+		UserController controller = new UserController(userService);
 		controller.create(user);
 		User updateUser = new User("updated@test.ru", "updatedlogin", "Updated Name", LocalDate.of(1985, 1, 20));
 		updateUser.setId(-1);
@@ -194,7 +209,7 @@ class FilmorateApplicationTests {
 	public void FilmReleaseDate_27_12_1895_ShouldThrowException() {
 		Film film = new Film ("Man in Black",
 		"Best Movie Ever", LocalDate.of(1895, 12,27),90);
-		FilmController controller = new FilmController();
+		FilmController controller = new FilmController(filmService);
 
 		Exception exception = assertThrows(
 				FilmorateValidationException.class,
@@ -208,7 +223,7 @@ class FilmorateApplicationTests {
 	public void FilmReleaseDate_28_12_1895_NotThrowException() {
 		Film film = new Film ("Man in Black",
 				"Best Movie Ever", LocalDate.of(1895, 12,28),90);
-		FilmController controller = new FilmController();
+		FilmController controller = new FilmController(filmService);
 		assertDoesNotThrow(() -> controller.create(film));
 	}
 
@@ -276,7 +291,7 @@ class FilmorateApplicationTests {
 	@Test
 	public void EmptyUserNameShouldUserLoginAsName() {
 		User user = new User ("innam@test.com", "imurzina","", LocalDate.of(1975, 1, 25));
-		UserController controller = new UserController();
+		UserController controller = new UserController(userService);
 		User returnedUser = controller.create(user);
 		assertEquals("imurzina",
 				returnedUser.getName());

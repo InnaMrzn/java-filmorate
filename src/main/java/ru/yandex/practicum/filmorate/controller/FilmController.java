@@ -1,51 +1,58 @@
 package ru.yandex.practicum.filmorate.controller;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
-
 import javax.validation.Valid;
-import ru.yandex.practicum.filmorate.exception.FilmorateValidationException;
-import java.time.LocalDate;
-import java.util.*;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import java.util.List;
+import java.util.Set;
+
 
 @RestController
 @RequestMapping("/films")
 @Slf4j
 public class FilmController {
+    private final FilmService filmService;
+    @Autowired
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
 
-    private final Map<Integer, Film> films = new HashMap<>();
-    private int lastUsedId;
-
-    private int getNextId() {
-        return ++lastUsedId;
+    @GetMapping ("/popular")
+    public List<Film> getPopularFilms(@RequestParam (value = "count", defaultValue = "10", required = false) Integer count){
+        return filmService.getPopularFilms(count);
     }
 
     @GetMapping
     public Set<Film> findAll() {
-        return new HashSet<Film>(films.values());
+        return filmService.findAll();
+    }
+
+    @GetMapping ("/{id}")
+    public Film findById(@PathVariable long id) {
+        return filmService.findById(id);
     }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            throw new FilmorateValidationException("Дата фильма не может быть раньше 28.12.1895");
-        }
-        film.setId(getNextId());
-        films.put(film.getId(),film);
-        log.info("Новый фильм успешно добавлен с ID: '{}'",
-                film.getId());
-        return film;
+        return filmService.create(film);
     }
 
     @PutMapping
     public Film update(@RequestBody Film film) {
-        if (film.getId()<=0) {
-            throw new FilmorateValidationException("неверный ID фильма для обновления "+film.getId());
-        }
-        films.put(film.getId(),film);
-        log.info("Фильм с ID '{}' успешно изменен",
-                film.getId());
-        return film;
+        return filmService.update(film);
     }
+
+    @PutMapping ("/{id}/like/{userId}")
+    public boolean addLike(@PathVariable Long id, @PathVariable Long userId) {
+        return filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping ("/{id}/like/{userId}")
+    public boolean deleteLike(@PathVariable Long id, @PathVariable Long userId) {
+        return filmService.deleteLike(id, userId);
+    }
+
+
 }

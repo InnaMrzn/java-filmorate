@@ -39,8 +39,10 @@ public class InMemoryUserStorage implements UserStorage {
         return user;
     }
 
-    public boolean delete (long id){
-        return true;
+    public void delete (long id){
+        if (users.get(id) == null)
+            throw new NotFoundException(String.format("Невозможно удалить. Пользователь с id %s не найден", id));
+        users.remove(id);
     }
 
 }

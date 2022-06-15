@@ -24,14 +24,15 @@ public class InMemoryFilmStorage implements FilmStorage {
         return films.get(id);
     }
 
-    public boolean delete (long id) {
-        return true;
+    public void delete (long id) {
+        if (films.get(id) == null)
+            throw new NotFoundException(String.format("Невозможно удалить фильм. Фильм с id %s не найден", id));
+        films.remove(id);
     }
 
     public Film create(Film film) {
         films.put(film.getId(),film);
-        log.info("Новый фильм успешно добавлен с ID: '{}'",
-                film.getId());
+        log.info("Новый фильм успешно добавлен с ID: '{}'", film.getId());
         return film;
     }
 

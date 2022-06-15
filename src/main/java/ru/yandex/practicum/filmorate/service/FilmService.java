@@ -47,31 +47,33 @@ public class FilmService {
         return filmStorage.update(film);
     }
 
-    public boolean addLike (Long filmId, Long userId){
+    public void addLike (Long filmId, Long userId){
         Film film = filmStorage.getFilmById(filmId);
-        if (film == null)
-            throw new NotFoundException("фильм с id="+filmId+" Не найден");
+        if (film == null) {
+            throw new NotFoundException("фильм с id=" + filmId + " Не найден");
+        }
         User user = userStorage.getUserById(userId);
-        if (user == null)
-            throw new NotFoundException("пользователь с id="+userId+", не найден");
+        if (user == null) {
+            throw new NotFoundException("пользователь с id=" + userId + ", не найден");
+        }
         film.getLikes().add(userId);
         user.getLikedFilms().add(filmId);
         filmStorage.update(film);
         userStorage.update(user);
-        return true;
     }
-    public boolean deleteLike (Long filmId, Long userId){
+    public void deleteLike (Long filmId, Long userId){
         Film film = filmStorage.getFilmById(filmId);
-        if (film == null)
-            throw new NotFoundException("фильм с id="+filmId+" Не найден");
+        if (film == null) {
+            throw new NotFoundException("фильм с id=" + filmId + " Не найден");
+        }
         User user = userStorage.getUserById(userId);
-        if (user == null)
-            throw new NotFoundException("пользователь с id="+userId+", не найден");
+        if (user == null) {
+            throw new NotFoundException("пользователь с id=" + userId + ", не найден");
+        }
         film.getLikes().remove(userId);
         user.getLikedFilms().remove(filmId);
         filmStorage.update(film);
         userStorage.update(user);
-        return true;
     }
 
     public List<Film> getPopularFilms(Integer count){

@@ -19,14 +19,16 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     public Film getFilmById(long id) {
-        if (films.get(id) == null)
+        if (films.get(id) == null) {
             throw new NotFoundException(String.format("Фильм с id %s не найден", id));
+        }
         return films.get(id);
     }
 
     public void delete (long id) {
-        if (films.get(id) == null)
+        if (films.get(id) == null) {
             throw new NotFoundException(String.format("Невозможно удалить фильм. Фильм с id %s не найден", id));
+        }
         films.remove(id);
     }
 
@@ -37,9 +39,10 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     public Film update(Film film) {
-        if (films.get(film.getId()) == null)
+        if (films.get(film.getId()) == null) {
             throw new NotFoundException(String.format("Невозможно обновить. Фильм с id %s не найден",
                     film.getId()));
+        }
         films.put(film.getId(),film);
         log.info("Фильм с ID '{}' успешно изменен",
                 film.getId());

@@ -19,8 +19,9 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     public User getUserById (long id) {
-        if (users.get(id) == null)
+        if (users.get(id) == null) {
             throw new NotFoundException(String.format("Пользователь с id %s не найден", id));
+        }
         return users.get(id);
     }
 
@@ -31,17 +32,19 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     public User update(User user) {
-        if (users.get(user.getId()) == null)
+        if (users.get(user.getId()) == null) {
             throw new NotFoundException(String.format("Невозможно обновить. Пользователь с id %s не найден",
                     user.getId()));
+        }
         users.put(user.getId(),user);
         log.info("Пользователь с ID '{}' успешно изменен", user.getId());
         return user;
     }
 
     public void delete (long id){
-        if (users.get(id) == null)
+        if (users.get(id) == null) {
             throw new NotFoundException(String.format("Невозможно удалить. Пользователь с id %s не найден", id));
+        }
         users.remove(id);
     }
 

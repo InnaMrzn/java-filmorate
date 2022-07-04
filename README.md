@@ -1,1 +1,3 @@
-# java-filmorat![filmorate_DB_spring10](https://user-images.githubusercontent.com/68862364/177203274-0cbdab37-2b69-4924-8e4c-bbf87abc2257.png)
+Обновила схему БД
+![filmorate_DB-string10_updated](https://user-images.githubusercontent.com/68862364/177215247-bf911764-5698-41e6-a5f5-d1b5759f8a50.png)
+

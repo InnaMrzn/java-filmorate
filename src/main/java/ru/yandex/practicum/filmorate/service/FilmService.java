@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.FilmorateValidationException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -21,17 +21,18 @@ public class FilmService {
     private final UserStorage userStorage;
     private int lastUsedId;
 
-    @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, @Qualifier("inMemoryUserStorage") UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
     }
 
-    public Set<Film> findAll(){
+    public Collection<Film> findAll(){
+
         return filmStorage.getFilms();
     }
 
     public Film findById(long id){
+
         return filmStorage.getFilmById(id);
     }
 
@@ -77,7 +78,7 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilms(Integer count){
-        Set<Film> films = filmStorage.getFilms();
+        Collection<Film> films = filmStorage.getFilms();
         return films.stream().sorted((o1, o2) -> {
             int comp = o2.getLikes().size() -(o1.getLikes().size());
             return comp;

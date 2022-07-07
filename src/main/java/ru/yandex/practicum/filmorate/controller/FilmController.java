@@ -5,8 +5,9 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import javax.validation.Valid;
 import ru.yandex.practicum.filmorate.service.FilmService;
+
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 
 @RestController
@@ -25,7 +26,7 @@ public class FilmController {
     }
 
     @GetMapping
-    public Set<Film> findAll() {
+    public Collection<Film> findAll() {
         return filmService.findAll();
     }
 

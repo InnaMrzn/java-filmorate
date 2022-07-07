@@ -2,15 +2,13 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,10 +18,10 @@ public class UserService {
     private int lastUsedId;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
-    public Set<User> findAll() {
+    public Collection<User> findAll() {
         return userStorage.getUsers();
     }
 
@@ -35,7 +33,6 @@ public class UserService {
         if (user.getName().isBlank() || user.getName().isEmpty()) {
             user.setName(user.getLogin());
         }
-        user.setId(getNextId());
         return userStorage.create(user);
     }
 
@@ -85,7 +82,6 @@ public class UserService {
     }
 
     public List<User> getCommonFriends (Long userId, Long otherUserId){
-        List<User> friends = new ArrayList();
         User user = userStorage.getUserById(userId);
         if (user == null) {
             throw new NotFoundException("пользователь с id=" + userId + " Не найден");

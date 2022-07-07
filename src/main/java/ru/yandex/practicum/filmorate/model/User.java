@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.service.model;
+package ru.yandex.practicum.filmorate.model;
 
 import java.time.LocalDate;
 import java.util.HashSet;

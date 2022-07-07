@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.service.model;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -40,7 +40,6 @@ public class User {
     }
 
     public User (String login, String name, String email, LocalDate birthday) {
-        this.id =id;
         this.name = name;
         this.login = login;
         this.birthday = birthday;

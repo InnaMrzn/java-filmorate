@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.exception;
 
 public class IncorrectPathVariableException extends RuntimeException {
-    private String pathVariable;
+    private final String pathVariable;
 
     public IncorrectPathVariableException(String message, String pathVariable) {
         super(message);

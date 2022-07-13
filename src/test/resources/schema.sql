@@ -7,22 +7,22 @@ CREATE TABLE IF NOT EXISTS USERS (
 );
 
 CREATE TABLE IF NOT EXISTS FILMS (
-                                    FILM_ID INTEGER PRIMARY KEY AUTO_INCREMENT,
-                                    FILM_NAME VARCHAR(40) NOT NULL,
-                                    FILM_DESCRIPTION VARCHAR(200),
-                                    FILM_MPA_ID INTEGER,
-                                    RELEASE_DATE DATE,
-                                    FILM_DURATION INT
+                                     FILM_ID INTEGER PRIMARY KEY AUTO_INCREMENT,
+                                     FILM_NAME VARCHAR(40) NOT NULL,
+                                     FILM_DESCRIPTION VARCHAR(200),
+                                     FILM_MPA_ID INTEGER,
+                                     RELEASE_DATE DATE,
+                                     FILM_DURATION INT
 );
 
 CREATE TABLE  IF NOT EXISTS MPA_RATINGS (
-                                    RATING_ID INTEGER PRIMARY KEY AUTO_INCREMENT,
-                                    RATING_DESC VARCHAR(20)
+                                            RATING_ID INTEGER PRIMARY KEY AUTO_INCREMENT,
+                                            RATING_DESC VARCHAR(20)
 );
 
 CREATE TABLE  IF NOT EXISTS GENRES (
-                                      GENRE_ID INTEGER PRIMARY KEY AUTO_INCREMENT,
-                                      GENRE_DESC VARCHAR(20)
+                                       GENRE_ID INTEGER PRIMARY KEY AUTO_INCREMENT,
+                                       GENRE_DESC VARCHAR(20)
 );
 
 CREATE TABLE  IF NOT EXISTS FILM_GENRE (

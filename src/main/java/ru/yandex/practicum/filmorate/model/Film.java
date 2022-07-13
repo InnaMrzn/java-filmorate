@@ -1,47 +1,30 @@
 package ru.yandex.practicum.filmorate.model;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import lombok.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 
-@Getter
-@Setter
+@Data
 public class Film {
-    private long id;
-    private Set<Long> likes = new HashSet<>();
-    private Set<String> genres = new HashSet<>();
-    private String rating;
+    private Long id;
+    private Mpa mpa;
+    private List<Genre> genres = new ArrayList<>();
 
     @NotBlank (message = "название фильма не должно быть пустым")
-    private String name;
+    private final String name;
 
     @Size(max=200, message = "описание фильма должно быть не длиннее 200 символов")
-    private String description;
+    private final String description;
 
-    private LocalDate releaseDate;
+    private final LocalDate releaseDate;
 
     @Positive (message = "продолжительность фильма должна быть больше 0")
-    private int duration;
+    private final int duration;
 
-    public Film (long id, String name, String description, LocalDate releaseDate,int duration) {
-        this.id =id;
-        this.name = name;
-        this.description = description;
-        this.releaseDate = releaseDate;
-        this.duration = duration;
-    }
 
-    public Film (String name, String description, LocalDate releaseDate,int duration) {
-        this.name = name;
-        this.description = description;
-        this.releaseDate = releaseDate;
-        this.duration = duration;
-    }
+
 }

@@ -26,7 +26,7 @@ public class FilmorateExceptionHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleValidationException (MethodArgumentNotValidException ex){
-        StringBuilder errorMessage = new StringBuilder("");
+        StringBuilder errorMessage = new StringBuilder();
         for (final FieldError error : ex.getBindingResult().getFieldErrors()) {
             errorMessage.append(error.getField() + ": " + error.getDefaultMessage()+"; ");
         }

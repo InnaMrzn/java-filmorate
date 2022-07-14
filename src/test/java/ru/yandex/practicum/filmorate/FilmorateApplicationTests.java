@@ -1,313 +1,139 @@
 package ru.yandex.practicum.filmorate;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.yandex.practicum.filmorate.controller.FilmController;
-import ru.yandex.practicum.filmorate.controller.UserController;
-import ru.yandex.practicum.filmorate.exception.FilmorateValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
-
-import javax.validation.*;
+import ru.yandex.practicum.filmorate.storage.*;
+import ru.yandex.practicum.filmorate.storage.impl.UserDbStorage;
 
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmorateApplicationTests {
+	private final UserDbStorage userStorage;
+	private final FilmStorage filmStorage;
+	private final LikesStorage likesStorage;
+	private final GenreStorage genreStorage;
+	private final MpaStorage mpaStorage;
+	private final FriendshipStorage friendshipStorage;
 
-	private static ValidatorFactory validatorFactory;
-	private static Validator validator;
-	FilmService filmService;
-	UserService userService;
+	@Test
+	public void testUpdateUser(){
+		User updatedUser = new User("inna@test.com", "updatedInnam", "Inna Updated",
+				LocalDate.of(1999,12,23));
+		updatedUser.setId(1L);
+		long userId = userStorage.update(updatedUser);
+		assertThat(userId).isEqualTo(1L);
 
-	@BeforeAll
-	public static void createValidator() {
-		validatorFactory = Validation.buildDefaultValidatorFactory();
-		validator = validatorFactory.getValidator();
 	}
-
-	@AfterAll
-	public static void close() {
-		validatorFactory.close();
-	}
-
-	@BeforeEach
-	public void createServiceObjects (){
-		filmService = new FilmService(new InMemoryFilmStorage(), new InMemoryUserStorage());
-		userService = new UserService(new InMemoryUserStorage());
+	@Test
+	public void testFindUserById() {
+		User result = userStorage.getUserById(1);
+    	assertThat(result).isNotNull().hasFieldOrPropertyWithValue("id", 1L)
+				.hasFieldOrPropertyWithValue("name","Inna Updated");
 	}
 
 	@Test
-	void contextLoads() {
+	public void testFindUsers() {
+		List<User> results = userStorage.getUsers();
+		assertThat(results).isNotNull().hasSize(2);
+		assertThat(results.get(0)).hasFieldOrPropertyWithValue("id", 1L);
+	}
+    @Test
+	public void testMpaGetAll() {
+		List<Mpa> results = mpaStorage.getMpas();
+		assertThat(results).isNotNull().hasSize(5);
+		assertThat(results.get(0)).hasFieldOrPropertyWithValue("name", "G");
 	}
 
 	@Test
-	void createUser(){
-		User user = new User("innam@test.ru", "innam", "Inna Murzina", LocalDate.of(1975, 12, 25));
-		UserController controller = new UserController(userService);
-		controller.create(user);
-		assertEquals(1,controller.findAll().size() );
-		User result = controller.findAll().iterator().next();
-		assertEquals ("innam@test.ru", result.getEmail());
-		assertEquals ("innam", result.getLogin());
-		assertEquals ("Inna Murzina", result.getName());
-		assertEquals (LocalDate.of(1975,12,25), result.getBirthday());
-		assertEquals (1, result.getId());
-
+	public void testFindMpaById() {
+		Mpa result = mpaStorage.getMpaById(1);
+		assertThat(result).isNotNull().hasFieldOrPropertyWithValue("id", 1)
+				.hasFieldOrPropertyWithValue("name","G");
+	}
+	@Test
+	public void testGenresGetAll() {
+		List<Genre> results = genreStorage.getGenres();
+		assertThat(results).isNotNull().hasSize(6);
+		assertThat(results.get(0)).hasFieldOrPropertyWithValue("name", "Комедия");
 	}
 
 	@Test
-	void updateUserWithValidId(){
-		User user = new User("innam@test.ru", "innam", "Inna Murzina", LocalDate.of(1975, 12, 25));
-		UserController controller = new UserController(userService);
-		controller.create(user);
-		User updateUser = new User("updated@test.ru", "updatedlogin", "Updated Name", LocalDate.of(1985, 1, 20));
-		updateUser.setId(1);
-		controller.update(updateUser);
-		assertEquals(1,controller.findAll().size() );
-		User result = controller.findAll().iterator().next();
-		assertEquals ("updated@test.ru", result.getEmail());
-		assertEquals ("updatedlogin", result.getLogin());
-		assertEquals ("Updated Name", result.getName());
-		assertEquals (LocalDate.of(1985,1,20), result.getBirthday());
-		assertEquals (1, result.getId());
+	public void testFindGenreById() {
+		Genre result = genreStorage.getGenreById(1);
+		assertThat(result).isNotNull().hasFieldOrPropertyWithValue("id", 1);
+	}
 
+		@Test
+	public void testUpdateFilm(){
+		Film updatedFilm = new Film("My updated film 1", "updated good movie",
+				LocalDate.of(1999,12,23), 100);
+		updatedFilm.setId(1L);
+		updatedFilm.setMpa(mpaStorage.getMpaById(1));
+		long filmId = filmStorage.update(updatedFilm);
+		assertThat(filmId).isEqualTo(1L);
+	}
+	@Test
+	public void testFindFilmById() {
+		Film result = filmStorage.getFilmById(1);
+		assertThat(result).isNotNull().hasFieldOrPropertyWithValue("id", 1L)
+				.hasFieldOrPropertyWithValue("name","My updated film 1");
+	}
+	@Test
+	public void testFindFilms() {
+		List<Film> results = filmStorage.getFilms();
+		assertThat(results).isNotNull().hasSize(2);
+		assertThat(results.get(0)).hasFieldOrPropertyWithValue("id", 1L);
+	}
+	@Test
+	public void testAddAndDeleteLike() {
+		likesStorage.createLike(1L,2L);
+		List<Long> likedFilms = likesStorage.findFilmLikesByUser(1L);
+		List<Long> userLikes = likesStorage.findLikedUsersByFilm(2L);
+		assertThat(likedFilms).hasSize(1);
+		assertThat(userLikes).hasSize(1);
+		likesStorage.deleteLike(1,2);
+		likedFilms = likesStorage.findFilmLikesByUser(1);
+		userLikes = likesStorage.findLikedUsersByFilm(2);
+		assertThat(likedFilms).hasSize(0);
+		assertThat(userLikes).hasSize(0);
 	}
 
 	@Test
-	void createFilm(){
-		Film film = new Film ("Man in Black", "Best movie ever", LocalDate.of(1997, 1,1),90);
-		FilmController controller = new FilmController(filmService);
-		controller.create(film);
-		assertEquals(1,controller.findAll().size() );
-		Film result = controller.findAll().iterator().next();
-		assertEquals ("Man in Black", result.getName());
-		assertEquals ("Best movie ever", result.getDescription());
-		assertEquals (LocalDate.of(1997,1,1), result.getReleaseDate());
-		assertEquals (90, result.getDuration());
-		assertEquals (1, result.getId());
-	}
-
-
-	@Test
-	void updateFilmWithValidId(){
-		Film film = new Film ("Man in Black", "Best movie ever", LocalDate.of(1997, 1,1),90);
-		FilmController controller = new FilmController(filmService);
-		controller.create(film);
-		Film updateFilm = new Film ("Updated film name", "Updated film description", LocalDate.of(2000, 2,2),100);
-		updateFilm.setId(1);
-		controller.update(updateFilm);
-		assertEquals(1,controller.findAll().size() );
-		Film result = controller.findAll().iterator().next();
-		assertEquals ("Updated film name", result.getName());
-		assertEquals ("Updated film description", result.getDescription());
-		assertEquals (LocalDate.of(2000,2,2), result.getReleaseDate());
-		assertEquals (100, result.getDuration());
-		assertEquals (1, result.getId());
-
+	public void testGetPopularFilms(){
+		likesStorage.createLike(1L,2L);
+		List<Film> populrFilms = filmStorage.getPopularFilms(1);
+		assertThat(populrFilms).hasSize(1);
+		assertThat(populrFilms.get(0)).hasFieldOrPropertyWithValue("id",2L);
 	}
 
 	@Test
-	void updateFilmWithNegativeIdShouldThrowException(){
-		Film film = new Film ("Man in Black", "Best movie ever", LocalDate.of(1997, 1,1),90);
-		FilmController controller = new FilmController(filmService);
-		controller.create(film);
-		Film updateFilm = new Film ("Updated film name", "Updated film description", LocalDate.of(2000, 2,2),100);
-		updateFilm.setId(-1);
-		Exception exception = assertThrows(
-				FilmorateValidationException.class,
-				() -> controller.update(updateFilm)
-		);
-
-		assertEquals("неверный ID фильма для обновления -1", exception.getMessage());
-
+	public void testAddConfirmDeleteFriend(){
+		friendshipStorage.createFriendRequest(1,2);
+		List<Long> friends = friendshipStorage.findFriendsByUser(1);
+		assertThat(friends).hasSize(1);
+		friendshipStorage.confirmFriendRequest(1,2);
+		friends = friendshipStorage.findFriendsByUser(2);
+		assertThat(friends).hasSize(1);
+		friendshipStorage.removeFriendship(1,2);
+		List<Long> friends1 = friendshipStorage.findFriendsByUser(1);
+		List<Long> friends2 = friendshipStorage.findFriendsByUser(1);
+		assertThat(friends1).hasSize(0);
+		assertThat(friends2).hasSize(0);
 	}
 
-	@Test
-	void updateUserWithNegativeIdShouldThrowException(){
-		User user = new User("innam@test.ru", "innam", "Inna Murzina", LocalDate.of(1975, 12, 25));
-		UserController controller = new UserController(userService);
-		controller.create(user);
-		User updateUser = new User("updated@test.ru", "updatedlogin", "Updated Name", LocalDate.of(1985, 1, 20));
-		updateUser.setId(-1);
-		Exception exception = assertThrows(
-				FilmorateValidationException.class,
-				() -> controller.update(updateUser)
-		);
-
-		assertEquals("неверный ID пользователя для обновления -1", exception.getMessage());
-
-	}
-
-	@Test
-	public void shouldHaveNoUserViolations() {
-
-		User user = new User("innam@test.ru", "innam", "Inna Murzina", LocalDate.of(1975, 12, 25));
-		Set<ConstraintViolation<User>> violations = validator.validate(user);
-		assertTrue(violations.isEmpty());
-	}
-
-	@Test
-	public void shouldHaveNoFilmViolations() {
-
-		Film film = new Film ("Man in Black", "Best movie ever ", LocalDate.of(1997, 1,1),90);
-		Set<ConstraintViolation<Film>> violations = validator.validate(film);
-		assertTrue(violations.isEmpty());
-	}
-
-	@Test
-	public void EmptyFilmNameViolation() {
-		Film film = new Film (" ", "Best movie ever ", LocalDate.of(1997, 1,1),90);
-		Set<ConstraintViolation<Film>> violations = validator.validate(film);
-		assertEquals(violations.size(), 1);
-		ConstraintViolation<Film> violation
-				= violations.iterator().next();
-		assertEquals("название фильма не должно быть пустым",
-				violation.getMessage());
-		assertEquals("name", violation.getPropertyPath().toString());
-	}
-
-	@Test
-	public void FilmDescriptionLength201Violation() {
-		Film film = new Film ("Man in Black",
-				"BestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovie" +
-						"BestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovie" +
-						"BestMovieBestMovieBestMovieEnd", LocalDate.of(1997, 1,1),90);
-		Set<ConstraintViolation<Film>> violations = validator.validate(film);
-		assertEquals(violations.size(), 1);
-		ConstraintViolation<Film> violation
-				= violations.iterator().next();
-		assertEquals("описание фильма должно быть не длиннее 200 символов",
-				violation.getMessage());
-		assertEquals("description", violation.getPropertyPath().toString());
-	}
-
-	@Test
-	public void FilmDescriptionLength200NotViolation() {
-		Film film = new Film ("Man in Black",
-				"BestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovie" +
-						"BestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovieBestMovie" +
-						"BestMovieBestMovieBestMovieEn", LocalDate.of(1997, 1,1),90);
-		Set<ConstraintViolation<Film>> violations = validator.validate(film);
-		assertTrue(violations.isEmpty());
-	}
-
-	@Test
-	public void FilmReleaseDate_27_12_1895_ShouldThrowException() {
-		Film film = new Film ("Man in Black",
-		"Best Movie Ever", LocalDate.of(1895, 12,27),90);
-		FilmController controller = new FilmController(filmService);
-
-		Exception exception = assertThrows(
-				FilmorateValidationException.class,
-				() -> controller.create(film)
-		);
-
-		assertEquals("Дата фильма не может быть раньше 28.12.1895", exception.getMessage());
-	}
-
-	@Test
-	public void FilmReleaseDate_28_12_1895_NotThrowException() {
-		Film film = new Film ("Man in Black",
-				"Best Movie Ever", LocalDate.of(1895, 12,28),90);
-		FilmController controller = new FilmController(filmService);
-		assertDoesNotThrow(() -> controller.create(film));
-	}
-
-	@Test
-	public void FilmNegativeDurationViolation() {
-		Film film = new Film ("Man in Black",
-				"Best Movie ever", LocalDate.of(1997, 1,1),-1);
-		Set<ConstraintViolation<Film>> violations = validator.validate(film);
-		assertEquals(violations.size(), 1);
-		ConstraintViolation<Film> violation
-				= violations.iterator().next();
-		assertEquals("продолжительность фильма должна быть больше 0",
-				violation.getMessage());
-		assertEquals("duration", violation.getPropertyPath().toString());
-	}
-
-	@Test
-	public void EmptyUserEmailViolation() {
-		User user = new User ("", "imurzina","Inna Murzina", LocalDate.of(1975, 1, 25));
-		Set<ConstraintViolation<User>> violations = validator.validate(user);
-		assertEquals(violations.size(), 1);
-		ConstraintViolation<User> violation
-				= violations.iterator().next();
-		assertEquals("email не может быть пустым",
-				violation.getMessage());
-		assertEquals("email", violation.getPropertyPath().toString());
-	}
-
-	@Test
-	public void WrongUserEmailViolations() {
-		User user = new User ("hdcj", "imurzina","Inna Murzina", LocalDate.of(1975, 1, 25));
-		Set<ConstraintViolation<User>> violations = validator.validate(user);
-		ConstraintViolation<User> violation
-				= violations.iterator().next();
-
-		assertEquals("неправильный формат email",
-				violation.getMessage());
-		assertEquals("email", violation.getPropertyPath().toString());
-	}
-
-	@Test
-	public void EmptyUserLoginViolations() {
-		User user = new User ("innam@test.com", "","Inna Murzina", LocalDate.of(1975, 1, 25));
-		Set<ConstraintViolation<User>> violations = validator.validate(user);
-		ConstraintViolation<User> violation
-				= violations.iterator().next();
-
-		assertEquals("логин не может быть пустым",
-				violation.getMessage());
-		assertEquals("login", violation.getPropertyPath().toString());
-	}
-
-	@Test
-	public void UserLoginWithSpacesViolations() {
-		User user = new User ("innam@test.com", "Inna Inna","Inna Murzina", LocalDate.of(1975, 1, 25));
-		Set<ConstraintViolation<User>> violations = validator.validate(user);
-		ConstraintViolation<User> violation
-				= violations.iterator().next();
-
-		assertEquals("в логине не должно быть пробелов",
-				violation.getMessage());
-		assertEquals("login", violation.getPropertyPath().toString());
-	}
-
-	@Test
-	public void EmptyUserNameShouldUserLoginAsName() {
-		User user = new User ("innam@test.com", "imurzina","", LocalDate.of(1975, 1, 25));
-		UserController controller = new UserController(userService);
-		User returnedUser = controller.create(user);
-		assertEquals("imurzina",
-				returnedUser.getName());
-	}
-
-	@Test
-	public void UserBirthdayInFutureViolations() {
-		User user = new User ("innam@test.com", "innam","Inna Murzina", LocalDate.of(2022, 12, 30));
-		Set<ConstraintViolation<User>> violations = validator.validate(user);
-		ConstraintViolation<User> violation
-				= violations.iterator().next();
-
-		assertEquals("дата рождения не может быть в будущем",
-				violation.getMessage());
-		assertEquals("birthday", violation.getPropertyPath().toString());
-	}
 
 
 }

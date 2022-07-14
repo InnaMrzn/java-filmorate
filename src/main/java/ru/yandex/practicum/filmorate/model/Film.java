@@ -1,8 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import lombok.*;
 import javax.validation.constraints.NotBlank;
@@ -11,8 +10,9 @@ import javax.validation.constraints.Size;
 
 @Data
 public class Film {
-    private long id;
-    private Set<Long> likes = new HashSet<>();
+    private Long id;
+    private Mpa mpa;
+    private List<Genre> genres = new ArrayList<>();
 
     @NotBlank (message = "название фильма не должно быть пустым")
     private final String name;
@@ -24,6 +24,7 @@ public class Film {
 
     @Positive (message = "продолжительность фильма должна быть больше 0")
     private final int duration;
+
 
 
 }

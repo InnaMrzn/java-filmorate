@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -37,12 +38,13 @@ public class MpaDbStorage implements MpaStorage {
     @Override
     public Mpa getMpaById (int id) {
         final String sql = "select RATING_ID, RATING_DESC from MPA_RATINGS where RATING_ID = ?";
-        List<Mpa> mpas = jdbcTemplate.query(sql, (rs, rNum) -> mapMpaFromRs(rs, rNum), id);
-        if (mpas.size()!=1) {
-            throw new NotFoundException(String.format(log.getClass()+"MPA с ID= %s не найден",id));
+        try {
+            return jdbcTemplate.queryForObject(sql, (rs, rNum) -> mapMpaFromRs(rs, rNum), id);
+
+        } catch (EmptyResultDataAccessException ex) {
+            throw new NotFoundException(String.format(" MPA с ID= %s не найден",id));
         }
-        Mpa mpa = mpas.get(0);
-        log.debug("Успешно найден MPA с id "+mpa.getId());
-        return mpa;
+
+
     }
 }

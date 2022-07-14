@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -49,13 +50,12 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User getUserById (long id) {
         final String sql = "select * from USERS where USER_ID= ?";
-        List<User> users= jdbcTemplate.query(sql, (rs, rNum) -> mapUserFromRs(rs, rNum), id);
-        if (users.size()!=1) {
-            throw new NotFoundException(String.format("%s, Пользователь с ID= %s не найден",this.getClass(), id));
+        try {
+            return jdbcTemplate.queryForObject(sql, (rs, rNum) -> mapUserFromRs(rs, rNum), id);
+
+        } catch (EmptyResultDataAccessException ex) {
+            throw new NotFoundException(String.format(" Пользователь с ID= %s не найден",id));
         }
-        User user = users.get(0);
-        log.debug("Успешно найден пользователь в id "+user.getId());
-        return user;
     }
     @Override
     public long create(User user) {

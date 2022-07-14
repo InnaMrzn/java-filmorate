@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.LikesStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+
 import java.time.LocalDate;
 import java.util.*;
 
@@ -25,8 +26,8 @@ public class FilmService {
     private final GenreStorage genreStorage;
 
 
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
-                       @Qualifier("userDbStorage") UserStorage userStorage, LikesStorage likesStorage,
+    public FilmService(FilmStorage filmStorage,
+                       UserStorage userStorage, LikesStorage likesStorage,
                        GenreStorage genreStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
@@ -34,41 +35,41 @@ public class FilmService {
         this.genreStorage = genreStorage;
     }
 
-    public Collection<Film> findAll(){
+    public Collection<Film> findAll() {
 
-        List<Film> films =  filmStorage.getFilms();
-        for (Film film: films) {
-            List <Genre> genres = genreStorage.findFilmGenres(film.getId());
+        List<Film> films = filmStorage.getFilms();
+        for (Film film : films) {
+            List<Genre> genres = genreStorage.findFilmGenres(film.getId());
             film.setGenres(genres);
         }
-
         return films;
     }
 
-    public Film findById(long id){
+    public Film findById(long id) {
         Film film = filmStorage.getFilmById(id);
         film.setGenres(genreStorage.findFilmGenres(id));
 
         return film;
     }
-    public Film create (Film film) {
+
+    public Film create(Film film) {
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             throw new FilmorateValidationException("Дата фильма не может быть раньше 28.12.1895");
         }
         long filmId = filmStorage.create(film);
-        genreStorage.createFilmGenres (filmId, film.getGenres());
+        genreStorage.createFilmGenres(filmId, film.getGenres());
         return findById(filmId);
     }
 
-    public Film update (Film film){
+    public Film update(Film film) {
         long filmId = filmStorage.update(film);
         genreStorage.deleteFilmGenres(filmId);
-        genreStorage.createFilmGenres (filmId, film.getGenres());
+        genreStorage.createFilmGenres(filmId, film.getGenres());
 
         return findById(filmId);
     }
 
-    public void addLike (Long filmId, Long userId){
+    public void addLike(Long filmId, Long userId) {
         Film film = filmStorage.getFilmById(filmId);
         if (film == null) {
             throw new NotFoundException("фильм с id=" + filmId + " Не найден");
@@ -77,28 +78,29 @@ public class FilmService {
         if (user == null) {
             throw new NotFoundException("пользователь с id=" + userId + ", не найден");
         }
-        likesStorage.createLike(userId,filmId);
-    }
-    public void deleteLike (Long filmId, Long userId){
-        Film film = filmStorage.getFilmById(filmId);
-        if (film == null) {
-            throw new NotFoundException("фильм с id=" + filmId + " Не найден");
-        }
-        User user = userStorage.getUserById(userId);
-        if (user == null) {
-            throw new NotFoundException("пользователь с id=" + userId + ", не найден");
-        }
-        likesStorage.deleteLike(userId,filmId);
+        likesStorage.createLike(userId, filmId);
     }
 
-    public List<Film> getPopularFilms(Integer count){
-        if (count == null){
+    public void deleteLike(Long filmId, Long userId) {
+        Film film = filmStorage.getFilmById(filmId);
+        if (film == null) {
+            throw new NotFoundException("фильм с id=" + filmId + " Не найден");
+        }
+        User user = userStorage.getUserById(userId);
+        if (user == null) {
+            throw new NotFoundException("пользователь с id=" + userId + ", не найден");
+        }
+        likesStorage.deleteLike(userId, filmId);
+    }
+
+    public List<Film> getPopularFilms(Integer count) {
+        if (count == null) {
             count = 10;
         }
         List<Film> films = filmStorage.getPopularFilms(count);
 
-        for (Film film: films) {
-            List <Genre> genres = genreStorage.findFilmGenres(film.getId());
+        for (Film film : films) {
+            List<Genre> genres = genreStorage.findFilmGenres(film.getId());
             film.setGenres(genres);
         }
         return films;

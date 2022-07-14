@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -10,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.LikesStorage;
+
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,6 +28,7 @@ public class FilmDbStorage implements FilmStorage {
     public FilmDbStorage(JdbcTemplate jdbcTemplate, LikesStorage likesStorage) {
         this.jdbcTemplate = jdbcTemplate;
     }
+
     @Override
     public List<Film> getFilms() {
         final String sql = "select f.FILM_ID, f.FILM_NAME, f.FILM_DESCRIPTION, f.FILM_MPA_ID, f.RELEASE_DATE, f.FILM_DURATION, " +
@@ -34,8 +37,9 @@ public class FilmDbStorage implements FilmStorage {
         log.debug(String.format("найдено %s фильмов", films.size()));
         return films;
     }
+
     @Override
-    public List<Film> getPopularFilms (int limit) {
+    public List<Film> getPopularFilms(int limit) {
         String sqlQuery = "select f.film_id, f.film_name, f.FILM_DESCRIPTION, f.film_mpa_id, f.release_date," +
                 "f.film_duration, m.RATING_DESC, count(likes.user_id) as likesNum " +
                 "from FILMS as f left join MPA_RATINGS as m on f.FILM_MPA_ID = m.RATING_ID " +
@@ -54,21 +58,21 @@ public class FilmDbStorage implements FilmStorage {
         final String sql = "select f.FILM_ID, f.FILM_NAME, f.FILM_DESCRIPTION, f.FILM_MPA_ID, f.RELEASE_DATE, " +
                 "f.FILM_DURATION, m.RATING_DESC from FILMS as f left join MPA_RATINGS as m on " +
                 "f.FILM_MPA_ID = m.RATING_ID where f.FILM_ID = ?";
-        List<Film> films= jdbcTemplate.query(sql, (rs, rNum) -> mapFilmFromRs(rs, rNum), id);
-        if (films.size()!=1) {
-            throw new NotFoundException(String.format("%s. Пользователь с ID= %s не найден",this.getClass(),id));
-        }
-        Film foundFilm = films.get(0);
 
-        return foundFilm;
+        try {
+            return jdbcTemplate.queryForObject(sql, (rs, rNum) -> mapFilmFromRs(rs, rNum), id);
+
+        } catch (EmptyResultDataAccessException ex) {
+            throw new NotFoundException(String.format(" Фильм с ID= %s не найден", id));
+        }
     }
 
     @Override
-    public boolean delete (long id) {
+    public boolean delete(long id) {
         String sqlQuery = "delete from FILMS where FILM_ID = ?";
         int rowCount = jdbcTemplate.update(sqlQuery, id);
         log.debug("%s  Удален %s фильм.", this.getClass(), rowCount);
-        return rowCount>0;
+        return rowCount > 0;
     }
 
     @Override
@@ -86,7 +90,7 @@ public class FilmDbStorage implements FilmStorage {
             stmt.setInt(5, film.getDuration());
             return stmt;
         }, keyHolder);
-        log.debug(String.format("%s. Успешно создан фильм с id %s",this.getClass(),keyHolder.getKey().longValue() ));
+        log.debug(String.format("%s. Успешно создан фильм с id %s", this.getClass(), keyHolder.getKey().longValue()));
 
         return keyHolder.getKey().longValue();
 
@@ -96,14 +100,13 @@ public class FilmDbStorage implements FilmStorage {
     public long update(Film film) {
         String sqlQuery = "update FILMS set FILM_NAME = ?, FILM_DESCRIPTION = ?, FILM_MPA_ID = ?, RELEASE_DATE = ?," +
                 " FILM_DURATION =? where FILM_ID = ?";
-        int rowCount = jdbcTemplate.update(sqlQuery, film.getName(), film.getDescription(),film.getMpa().getId(),
+        int rowCount = jdbcTemplate.update(sqlQuery, film.getName(), film.getDescription(), film.getMpa().getId(),
                 film.getReleaseDate(), film.getDuration(), film.getId());
-        if (rowCount <1) {
-            throw new NotFoundException(String.format(" Фильм с ID= %s не найден, невзможно обновить",film.getId()));
+        if (rowCount < 1) {
+            throw new NotFoundException(String.format(" Фильм с ID= %s не найден, невзможно обновить", film.getId()));
         }
 
         return film.getId();
-
     }
 
     private Film mapFilmFromRs(ResultSet rs, int rowNum) throws SQLException {
@@ -112,9 +115,9 @@ public class FilmDbStorage implements FilmStorage {
         String description = rs.getString("film_description");
         LocalDate releaseDate = rs.getDate("release_date").toLocalDate();
         int duration = rs.getInt("film_duration");
-        int mpaId = rs.getByte("film_mpa_id");
+        int mpaId = rs.getInt("film_mpa_id");
         String mpaDesc = rs.getString("rating_desc");
-        Film result = new Film(name,description,releaseDate, duration);
+        Film result = new Film(name, description, releaseDate, duration);
         result.setMpa(new Mpa(mpaId, mpaDesc));
         result.setId(id);
         return result;

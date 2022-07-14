@@ -20,7 +20,7 @@ public class GenreService {
         return genreStorage.getGenres();
     }
 
-    public Genre findById(byte id){
+    public Genre findById  (int id){
 
         return genreStorage.getGenreById(id);
     }
